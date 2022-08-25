@@ -1,6 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Automata.DFA (module Automata.DFA) where
 
@@ -17,7 +15,7 @@ data DFA s a = DFA
     endings :: s -> Bool
   }
 
-instance Automaton DFA s a where
+instance Automaton DFA where
   accepts :: DFA s a -> [a] -> Bool
   accepts dfa string =
     let lastState = run dfa string

@@ -1,6 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Automata.NFA (module Automata.NFA) where
 
@@ -17,7 +15,7 @@ data NFA s a = NFA
     endings :: s -> Bool
   }
 
-instance Automaton NFA s a where
+instance Automaton NFA where
   accepts :: NFA s a -> [a] -> Bool
   accepts nfa string =
     let lastStates = run nfa string
