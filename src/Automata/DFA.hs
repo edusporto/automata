@@ -25,7 +25,7 @@ run :: DFA s a -> [a] -> s
 run dfa = foldl' (transition dfa) (start dfa)
 
 inter :: DFA s1 a -> DFA s2 a -> DFA (s1, s2) a
-inter (DFA δ1 s1 end1) (DFA δ2 s2 end2) = DFA δ (s1, s2) end
+inter (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) end
   where
     δ (r1, r2) a = (δ1 r1 a, δ2 r2 a)
     end (r1, r2) = end1 r1 && end2 r2
@@ -34,7 +34,7 @@ inter (DFA δ1 s1 end1) (DFA δ2 s2 end2) = DFA δ (s1, s2) end
 (∩) = inter
 
 union :: DFA s1 a -> DFA s2 a -> DFA (s1, s2) a
-union (DFA δ1 s1 end1) (DFA δ2 s2 end2) = DFA δ (s1, s2) end
+union (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) end
   where
     δ (r1, r2) a = (δ1 r1 a, δ2 r2 a)
     end (r1, r2) = end1 r1 || end2 r2
