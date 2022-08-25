@@ -10,5 +10,9 @@ dfaToNfa (D.DFA δ s e) = N.NFA newδ s e
       Nothing -> []
       Just sym -> [δ q sym]
 
-nfaToDfa :: N.NFA s a -> D.DFA s a
-nfaToDfa = error "TODO"
+nfaToDfa :: N.NFA s a -> D.DFA [s] a
+nfaToDfa (N.NFA δ q e) = D.DFA δ' q' e'
+  where
+    δ' r' a = concat [δ r (Just a) | r <- r']
+    q' = [q]
+    e' = any e
