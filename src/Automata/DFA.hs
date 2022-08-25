@@ -1,5 +1,10 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Automata.DFA (module Automata.DFA) where
 
+import Automata.Automaton (Automaton, accepts)
 import Data.Foldable (foldl')
 
 -- | Represents a Deterministic Finite Automaton.
@@ -12,13 +17,14 @@ data DFA s a = DFA
     endings :: s -> Bool
   }
 
+instance Automaton DFA s a where
+  accepts :: DFA s a -> [a] -> Bool
+  accepts dfa string =
+    let lastState = run dfa string
+     in endings dfa lastState
+
 run :: DFA s a -> [a] -> s
 run dfa = foldl' (transition dfa) (start dfa)
-
-accepts :: DFA s a -> [a] -> Bool
-accepts dfa string =
-  let lastState = run dfa string
-   in endings dfa lastState
 
 inter :: DFA s1 a -> DFA s2 a -> DFA (s1, s2) a
 inter (DFA δ1 s1 end1) (DFA δ2 s2 end2) = DFA δ (s1, s2) end

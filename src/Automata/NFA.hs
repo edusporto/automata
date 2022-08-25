@@ -1,8 +1,11 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Automata.NFA (module Automata.NFA) where
 
+import Automata.Automaton (Automaton, accepts)
 import Data.Foldable (foldl')
-
-import qualified Automata.DFA as DFA
 
 -- | Represents a Non-deterministic Finite Automaton.
 --
@@ -14,6 +17,12 @@ data NFA s a = NFA
     endings :: s -> Bool
   }
 
+instance Automaton NFA s a where
+  accepts :: NFA s a -> [a] -> Bool
+  accepts nfa string =
+    let lastStates = run nfa string
+     in any (endings nfa) lastStates
+
 next :: (s -> Maybe a -> [s]) -> [s] -> a -> [s]
 next δ states symbol =
   states >>= \state ->
@@ -21,11 +30,3 @@ next δ states symbol =
 
 run :: NFA s a -> [a] -> [s]
 run nfa = foldl' (next (transition nfa)) [start nfa]
-
-accepts :: NFA s a -> [a] -> Bool
-accepts nfa string =
-  let lastStates = run nfa string
-   in any (endings nfa) lastStates
-
-nfaIntoDfa :: NFA s a -> DFA.DFA s a
-nfaIntoDfa = error "TODO"
