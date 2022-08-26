@@ -36,7 +36,9 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      HUnit
+    , base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 executable automata-exe
@@ -47,8 +49,10 @@ executable automata-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      automata
+      HUnit
+    , automata
     , base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 test-suite automata-test
@@ -60,6 +64,8 @@ test-suite automata-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      automata
+      HUnit
+    , automata
     , base >=4.7 && <5
+    , containers
   default-language: Haskell2010
