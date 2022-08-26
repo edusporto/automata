@@ -40,4 +40,4 @@ union (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) end
     end (r1, r2) = end1 r1 || end2 r2
 
 (∪) :: DFA s1 a -> DFA s2 a -> DFA (s1, s2) a
-(∪) = inter
+(∪) = union
