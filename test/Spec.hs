@@ -1,13 +1,28 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 
 import Automata.Automaton (Automaton (accepts))
+import Automata.Conversion
 import Automata.DFA
 import Automata.NFA
 import Data.Map (Map, fromList, (!))
 import Test.HUnit
 
 data Binary = Zero | One
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show Binary where
+  show Zero = "0"
+  show One = "1"
+
+binarize :: [Char] -> [Binary]
+binarize =
+  map
+    ( \case
+        '0' -> Zero
+        '1' -> One
+        _ -> error "invalid binary digit"
+    )
 
 example1 :: DFA String Char
 example1 =
@@ -25,13 +40,21 @@ example1 =
           ("q001", fromList [('0', "q001"), ('1', "q001")])
         ]
 
+try :: (Automaton n, Show a) => String -> Bool -> n s a -> [a] -> Test
+try name bool automaton str =
+  TestCase $ assertEqual (name ++ " " ++ show str) bool (accepts automaton str)
+
 example1Tests :: Test
 example1Tests =
   TestList
-    [ TestCase (assert (accepts example1 "001")),
-      TestCase (assert (accepts example1 "0010")),
-      TestCase (assert (accepts example1 "0101010100100")),
-      TestCase (assert (not (accepts example1 "10000000000")))
+    [ try "dfa example1" True example1 "001",
+      try "dfa example1" True example1 "0010",
+      try "dfa example1" True example1 "0101010100100",
+      try "dfa example1" False example1 "10000000000",
+      try "nfa example1" True (dfaToNfa example1) "001",
+      try "nfa example1" True (dfaToNfa example1) "0010",
+      try "nfa example1" True (dfaToNfa example1) "0101010100100",
+      try "nfa example1" False (dfaToNfa example1) "10000000000"
     ]
 
 data Example2States = Q1 | Q2 | Q3 | Q4
@@ -62,22 +85,17 @@ example2 =
         Just One -> [Q4]
         Nothing -> []
 
-binarize :: [Char] -> [Binary]
-binarize =
-  map
-    ( \case
-        '0' -> Zero
-        '1' -> One
-        _ -> error "invalid binary digit"
-    )
-
 example2Tests :: Test
 example2Tests =
   TestList
-    [ TestCase $ assert (accepts example2 (binarize "111")),
-      TestCase $ assert $ not (accepts example2 (binarize "1000")),
-      TestCase $ assert (accepts example2 (binarize "010110")),
-      TestCase $ assert (accepts example2 (binarize "011"))
+    [ try "nfa example2" True example2 (binarize "111"),
+      try "nfa example2" False example2 (binarize "1000"),
+      try "nfa example2" True example2 (binarize "010110"),
+      try "nfa example2" True example2 (binarize "011"),
+      try "dfa example2" True (nfaToDfa example2) (binarize "111"),
+      try "dfa example2" False (nfaToDfa example2) (binarize "1000"),
+      try "dfa example2" True (nfaToDfa example2) (binarize "010110"),
+      try "dfa example2" True (nfaToDfa example2) (binarize "011")
     ]
 
 main :: IO Counts
