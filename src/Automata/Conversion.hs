@@ -13,6 +13,6 @@ dfaToNfa (D.DFA δ s e) = N.NFA newδ s e
 nfaToDfa :: N.NFA s a -> D.DFA [s] a
 nfaToDfa (N.NFA δ q e) = D.DFA δ' q' e'
   where
-    δ' r' a = concat [δ r (Just a) | r <- r']
+    δ' r' a = concat [δ r (Just a) ++ N.next δ (δ r Nothing) a | r <- r']
     q' = [q]
     e' = any e
