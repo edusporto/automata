@@ -21,11 +21,6 @@ instance Automaton NFA where
     let lastStates = run nfa string
      in any (endings nfa) lastStates
 
-data StateUnion s1 s2
-  = Start
-  | S1 s1
-  | S2 s2
-
 next :: (s -> Maybe a -> [s]) -> [s] -> a -> [s]
 next δ states symbol =
   states >>= \state ->
@@ -33,6 +28,15 @@ next δ states symbol =
 
 run :: NFA s a -> [a] -> [s]
 run nfa = foldl' (next (transition nfa)) [start nfa]
+
+-- | Used as the return type for the union of NFAs.
+--
+-- Since it is a sum type, it has 1 + |s1| + |s2|
+-- possible states.
+data StateUnion s1 s2
+  = Start
+  | S1 s1
+  | S2 s2
 
 -- | Union of NFAs
 --
