@@ -16,16 +16,16 @@ data DFA s a = DFA
   }
 
 instance Automaton DFA where
-  accepts :: DFA s a -> [a] -> Bool
+  accepts :: Foldable t => DFA s a -> t a -> Bool
   accepts dfa string =
     let lastState = run dfa string
      in endings dfa lastState
 
-run :: DFA s a -> [a] -> s
+run :: Foldable t => DFA s a -> t a -> s
 run dfa = foldl' (transition dfa) (start dfa)
 
 -- | Union of DFAs
--- 
+--
 -- Note that the resulting state set is a pair of s1 and s2.
 -- Since pairs are product types, the resulting amount of
 -- possible states is |s1| * |s2|.

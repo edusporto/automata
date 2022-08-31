@@ -16,7 +16,7 @@ data NFA s a = NFA
   }
 
 instance Automaton NFA where
-  accepts :: NFA s a -> [a] -> Bool
+  accepts :: Foldable t => NFA s a -> t a -> Bool
   accepts nfa string =
     let lastStates = run nfa string
      in any (endings nfa) lastStates
@@ -26,7 +26,7 @@ next δ states symbol =
   states >>= \state ->
     δ state (Just symbol) ++ next δ (δ state Nothing) symbol
 
-run :: NFA s a -> [a] -> [s]
+run :: Foldable t => NFA s a -> t a -> [s]
 run nfa = foldl' (next (transition nfa)) [start nfa]
 
 -- | Used as the return type for the union of NFAs.

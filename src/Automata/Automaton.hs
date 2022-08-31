@@ -1,4 +1,4 @@
 module Automata.Automaton (module Automata.Automaton) where
 
 class Automaton n where
-  accepts :: n s a -> [a] -> Bool
+  accepts :: Foldable t => n s a -> t a -> Bool
