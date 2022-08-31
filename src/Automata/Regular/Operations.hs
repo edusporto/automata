@@ -1,9 +1,9 @@
 module Automata.Regular.Operations (module Automata.Regular.Operations) where
 
+import Automata.Regular.Conversion (dfaToNfa, nfaToDfa)
 import Automata.Regular.DFA (DFA (DFA))
-import qualified Automata.Regular.DFA as D
 import Automata.Regular.NFA (NFA (NFA))
-import qualified Automata.Regular.NFA as N
+import Data.Maybe (isNothing)
 
 -- | Union of DFAs
 --
@@ -24,6 +24,10 @@ interD (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) end
   where
     δ (r1, r2) a = (δ1 r1 a, δ2 r2 a)
     end (r1, r2) = end1 r1 && end2 r2
+
+-- TODO?: Don't use NFA for DFA concatenation
+concatD :: DFA s1 a -> DFA s2 a -> DFA [Either s1 s2] a
+concatD dfa1 dfa2 = nfaToDfa $ concatN (dfaToNfa dfa1) (dfaToNfa dfa2)
 
 -- | Used as the return type for the union of NFAs.
 --
@@ -55,3 +59,11 @@ unionN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ Start end
       Start -> False
       S1 q' -> e1 q'
       S2 q' -> e2 q'
+
+concatN :: NFA s1 a -> NFA s2 a -> NFA (Either s1 s2) a
+concatN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ (Left s1) end
+  where
+    δ (Left q') a = ([Right s2 | isNothing a && e1 q']) ++ map Left (δ1 q' a)
+    δ (Right q') a = map Right (δ2 q' a)
+    end (Left _) = False
+    end (Right q') = e2 q'
