@@ -1,7 +1,7 @@
-module Automata.Conversion (module Automata.Conversion) where
+module Automata.Regular.Conversion (module Automata.Regular.Conversion) where
 
-import qualified Automata.DFA as D
-import qualified Automata.NFA as N
+import qualified Automata.Regular.DFA as D
+import qualified Automata.Regular.NFA as N
 
 dfaToNfa :: D.DFA s a -> N.NFA s a
 dfaToNfa (D.DFA δ s e) = N.NFA newδ s e

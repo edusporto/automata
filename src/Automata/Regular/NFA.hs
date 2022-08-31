@@ -1,6 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 
-module Automata.NFA (module Automata.NFA) where
+module Automata.Regular.NFA (module Automata.Regular.NFA) where
 
 import Automata.Automaton (Automaton, accepts)
 import Data.Foldable (foldl')

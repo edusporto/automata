@@ -2,9 +2,9 @@
 {-# LANGUAGE LambdaCase #-}
 
 import Automata.Automaton (Automaton (accepts))
-import Automata.Conversion
-import Automata.DFA
-import Automata.NFA
+import Automata.Regular.Conversion
+import Automata.Regular.DFA
+import Automata.Regular.NFA
 import Data.Map (Map, fromList, (!))
 import Test.HUnit
 

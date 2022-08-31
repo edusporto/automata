@@ -26,9 +26,9 @@ source-repository head
 library
   exposed-modules:
       Automata.Automaton
-      Automata.Conversion
-      Automata.DFA
-      Automata.NFA
+      Automata.Regular.Conversion
+      Automata.Regular.DFA
+      Automata.Regular.NFA
       Lib
   other-modules:
       Paths_automata
