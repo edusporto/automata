@@ -29,6 +29,7 @@ library
       Automata.Regular.Conversion
       Automata.Regular.DFA
       Automata.Regular.NFA
+      Automata.Regular.Operations
       Lib
   other-modules:
       Paths_automata
