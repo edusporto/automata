@@ -1,5 +1,6 @@
 module Automata.Regular.Operations (module Automata.Regular.Operations) where
 
+import Automata.Definitions.Set
 import Automata.Regular.Conversion (dfaToNfa, nfaToDfa)
 import Automata.Regular.DFA (DFA (DFA))
 import Automata.Regular.NFA (NFA (NFA))
@@ -14,16 +15,16 @@ import Data.Maybe (isNothing)
 -- This is different than the union operation for NFAs,
 -- which results in a sum type of size 1 + |s1| + |s2|.
 unionD :: DFA s1 a -> DFA s2 a -> DFA (s1, s2) a
-unionD (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) end
+unionD (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) (Set end)
   where
     δ (r1, r2) a = (δ1 r1 a, δ2 r2 a)
-    end (r1, r2) = end1 r1 || end2 r2
+    end (r1, r2) = end1 `contains` r1 || end2 `contains` r2
 
 interD :: DFA s1 a -> DFA s2 a -> DFA (s1, s2) a
-interD (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) end
+interD (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) (Set end)
   where
     δ (r1, r2) a = (δ1 r1 a, δ2 r2 a)
-    end (r1, r2) = end1 r1 && end2 r2
+    end (r1, r2) = end1 `contains` r1 && end2 `contains` r2
 
 -- TODO?: Don't use NFA for DFA concatenation
 concatD :: DFA s1 a -> DFA s2 a -> DFA [Either s1 s2] a
@@ -47,7 +48,7 @@ data StateUnion s1 s2
 -- This is different than the union operation for DFAs,
 -- which results in product type of size |s1| * |s2|.
 unionN :: NFA s1 a -> NFA s2 a -> NFA (StateUnion s1 s2) a
-unionN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ Start end
+unionN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ Start (Set end)
   where
     δ q a = case q of
       Start -> case a of
@@ -57,13 +58,13 @@ unionN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ Start end
       S2 q' -> map S2 (δ2 q' a)
     end q = case q of
       Start -> False
-      S1 q' -> e1 q'
-      S2 q' -> e2 q'
+      S1 q' -> e1 `contains` q'
+      S2 q' -> e2 `contains` q'
 
 concatN :: NFA s1 a -> NFA s2 a -> NFA (Either s1 s2) a
-concatN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ (Left s1) end
+concatN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ (Left s1) (Set end)
   where
-    δ (Left q') a = ([Right s2 | isNothing a && e1 q']) ++ map Left (δ1 q' a)
+    δ (Left q') a = ([Right s2 | isNothing a && e1 `contains` q']) ++ map Left (δ1 q' a)
     δ (Right q') a = map Right (δ2 q' a)
     end (Left _) = False
-    end (Right q') = e2 q'
+    end (Right q') = e2 `contains` q'
