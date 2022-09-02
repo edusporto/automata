@@ -16,14 +16,14 @@ import Data.Universe (Universe (universe))
 data NFA s a = NFA
   { transition :: s -> Maybe a -> [s],
     start :: s,
-    endings :: s -> Bool
+    endings :: Set s
   }
 
 instance Automaton NFA where
   accepts :: Foldable t => NFA s a -> t a -> Bool
   accepts nfa string =
     let lastStates = run nfa string
-     in any (endings nfa) lastStates
+     in any ((S.contains . endings) nfa) lastStates
 
 instance FiniteAutomaton NFA where
   acceptsT = accepts
@@ -63,7 +63,7 @@ instance FiniteAutomaton TypedNFA where
   acceptsT :: (Universe s, Eq s, Foldable t) => TypedNFA s a -> t a -> Bool
   acceptsT nfa string =
     let lastStates = runT nfa string
-    in any ((S.contains . endingsT) nfa) [s | s <- universe, lastStates `S.contains` s]
+     in any ((S.contains . endingsT) nfa) [s | s <- universe, lastStates `S.contains` s]
 
 nextT :: Universe s => (s -> Maybe a -> Set s) -> Set s -> a -> Set s
 nextT δ states symbol =

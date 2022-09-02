@@ -3,6 +3,7 @@
 module Automata.Regular.DFA (module Automata.Regular.DFA) where
 
 import Automata.Automaton (Automaton, FiniteAutomaton, accepts, acceptsT)
+import Automata.Definitions.Set
 import Data.Foldable (foldl')
 
 -- | Represents a Deterministic Finite Automaton.
@@ -12,14 +13,14 @@ import Data.Foldable (foldl')
 data DFA s a = DFA
   { transition :: s -> a -> s,
     start :: s,
-    endings :: s -> Bool
+    endings :: Set s
   }
 
 instance Automaton DFA where
   accepts :: Foldable t => DFA s a -> t a -> Bool
   accepts dfa string =
     let lastState = run dfa string
-     in endings dfa lastState
+     in endings dfa `contains` lastState
 
 instance FiniteAutomaton DFA where
   acceptsT = accepts
