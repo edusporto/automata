@@ -1,9 +1,13 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Automata.Regular.NFA (module Automata.Regular.NFA) where
 
-import Automata.Automaton (Automaton, accepts)
+import Automata.Automaton (Automaton, FiniteAutomaton (acceptsT), accepts)
+import Automata.Definitions.Set (Set)
+import qualified Automata.Definitions.Set as S
 import Data.Foldable (foldl')
+import Data.Universe (Universe (universe))
 
 -- | Represents a Non-deterministic Finite Automaton.
 --
@@ -15,33 +19,14 @@ data NFA s a = NFA
     endings :: s -> Bool
   }
 
--- | Experimental definition for an NFA.
---
--- The transition function in automata theory for an NFA
--- is of the type Q ⨯ Σ → P(Q), where P(Q) is the power set
--- of Q, that is, the set of all subsets of Q. The amount of
--- elements in the power set P(Q) is equal to 2^|Q|, where |Q|
--- is the amount of elements in Q.
---
--- The current definition for the NFA's transition function
--- returns a List, which is an infinite recursive type. The
--- power set could more accurately be represented by the
--- function (s -> Bool), which is equivalent to `2^s` in type
--- algebra.
---
--- Although promising, I haven't yet been able to come up with
--- a definition for `accepts` for this definition of δ.
-data TypedNFA s a = TypedNFA
-  { transitionT :: s -> Maybe a -> (s -> Bool),
-    startT :: s,
-    endingsT :: s -> Bool
-  }
-
 instance Automaton NFA where
   accepts :: Foldable t => NFA s a -> t a -> Bool
   accepts nfa string =
     let lastStates = run nfa string
      in any (endings nfa) lastStates
+
+instance FiniteAutomaton NFA where
+  acceptsT = accepts
 
 next :: (s -> Maybe a -> [s]) -> [s] -> a -> [s]
 next δ states symbol =
@@ -50,3 +35,40 @@ next δ states symbol =
 
 run :: Foldable t => NFA s a -> t a -> [s]
 run nfa = foldl' (next (transition nfa)) [start nfa]
+
+-- | Type algebra-driven representation of a non-deterministic
+-- finite state automaton
+--
+-- The transition function in automata theory for an NFA
+-- is of the type Q ⨯ (Σ ∪ ε) → P(Q), where P(Q) is the power set
+-- of Q, that is, the set of all subsets of Q. The amount of
+-- elements in the power set P(Q) is equal to 2^|Q|, where |Q|
+-- is the amount of elements in Q.
+--
+-- The other definition for the NFA's transition function
+-- returns a List, which is an infinite recursive type. The
+-- power set could more accurately be represented by the
+-- function s -> Bool, which is equivalent to `2^s` in type
+-- algebra.
+--
+-- This is probably less efficient than the other version,
+-- and needs to be tested.
+data TypedNFA s a = TypedNFA
+  { transitionT :: s -> Maybe a -> Set s,
+    startT :: s,
+    endingsT :: Set s
+  }
+
+instance FiniteAutomaton TypedNFA where
+  acceptsT :: (Universe s, Eq s, Foldable t) => TypedNFA s a -> t a -> Bool
+  acceptsT nfa string =
+    let lastStates = runT nfa string
+    in any ((S.contains . endingsT) nfa) [s | s <- universe, lastStates `S.contains` s]
+
+nextT :: Universe s => (s -> Maybe a -> Set s) -> Set s -> a -> Set s
+nextT δ states symbol =
+  states `S.bind` \state ->
+    δ state (Just symbol) `S.union` nextT δ (δ state Nothing) symbol
+
+runT :: (Universe s, Eq s) => Foldable t => TypedNFA s a -> t a -> Set s
+runT nfa = foldl' (nextT (transitionT nfa)) (S.singleton (startT nfa))
