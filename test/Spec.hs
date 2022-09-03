@@ -31,7 +31,7 @@ example1 =
   DFA
     (\q a -> transitions ! q ! a)
     "q"
-    (== "q001")
+    (Set (== "q001"))
   where
     transitions :: Map String (Map Char String)
     transitions =
@@ -71,7 +71,7 @@ example2 =
   NFA
     f
     Q1
-    (== Q4)
+    (Set (== Q4))
   where
     f = \case
       Q1 -> \case
@@ -145,7 +145,11 @@ example2Tests =
       tryT "typedNfa example2" True example2T (binarize "111"),
       tryT "typedNfa example2" False example2T (binarize "1000"),
       tryT "typedNfa example2" True example2T (binarize "010110"),
-      tryT "typedNfa example2" True example2T (binarize "011")
+      tryT "typedNfa example2" True example2T (binarize "011"),
+      try "typedDfa example2" True (nfaTToDfa example2T) (binarize "111"),
+      try "typedDfa example2" False (nfaTToDfa example2T) (binarize "1000"),
+      try "typedDfa example2" True (nfaTToDfa example2T) (binarize "010110"),
+      try "typedDfa example2" True (nfaTToDfa example2T) (binarize "011")
     ]
 
 main :: IO Counts

@@ -4,10 +4,10 @@
 module Automata.Regular.NFA (module Automata.Regular.NFA) where
 
 import Automata.Automaton (Automaton, FiniteAutomaton (acceptsT), accepts)
-import Automata.Definitions.Set (Set)
+import Automata.Definitions.Set (Set, inter, nonEmpty)
 import qualified Automata.Definitions.Set as S
 import Data.Foldable (foldl')
-import Data.Universe (Universe (universe))
+import Data.Universe (Universe)
 
 -- | Represents a Non-deterministic Finite Automaton.
 --
@@ -23,7 +23,7 @@ instance Automaton NFA where
   accepts :: Foldable t => NFA s a -> t a -> Bool
   accepts nfa string =
     let lastStates = run nfa string
-     in any ((S.contains . endings) nfa) lastStates
+     in any (endings nfa `S.contains`) lastStates
 
 instance FiniteAutomaton NFA where
   acceptsT = accepts
@@ -63,7 +63,7 @@ instance FiniteAutomaton TypedNFA where
   acceptsT :: (Universe s, Eq s, Foldable t) => TypedNFA s a -> t a -> Bool
   acceptsT nfa string =
     let lastStates = runT nfa string
-     in any ((S.contains . endingsT) nfa) [s | s <- universe, lastStates `S.contains` s]
+     in nonEmpty (endingsT nfa `inter` lastStates)
 
 nextT :: Universe s => (s -> Maybe a -> Set s) -> Set s -> a -> Set s
 nextT δ states symbol =
