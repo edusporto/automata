@@ -21,9 +21,11 @@ isIn = flip contains
 singleton :: Eq s => s -> Set s
 singleton s = Set (== s)
 
--- It is impossible to write a Functor for this definition of a set!
--- instance Functor Set where
---   fmap f (Set set) = Set (set . f)
+emptySet :: Set s
+emptySet = Set (const False)
+
+mapS :: (Eq s, Universe a) => (a -> s) -> Set a -> Set s
+mapS f set = fromList $ Prelude.fmap f (toList set)
 
 -- | Bind operation for non-deterministic computations over a Set
 --
@@ -34,6 +36,9 @@ bind (Set m) f = Set (\b -> any ($b) [bs | a <- universe, m a, let Set bs = f a]
 
 toList :: Universe s => Set s -> [s]
 toList set = [s | s <- universe, set `contains` s]
+
+fromList :: Eq s => [s] -> Set s
+fromList = foldr ((<>) . singleton) emptySet
 
 foldlS :: Universe a => (b -> a -> b) -> b -> Set a -> b
 foldlS f start set = Prelude.foldl f start (toList set)

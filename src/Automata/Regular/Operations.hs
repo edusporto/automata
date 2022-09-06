@@ -1,10 +1,16 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+
 module Automata.Regular.Operations (module Automata.Regular.Operations) where
 
 import Automata.Definitions.Set
 import Automata.Regular.Conversion (dfaToNfa, nfaToDfa)
 import Automata.Regular.DFA (DFA (DFA))
-import Automata.Regular.NFA (NFA (NFA))
+import Automata.Regular.NFA (NFA (NFA), TypedNFA (TypedNFA))
 import Data.Maybe (isNothing)
+import Data.Universe (Universe)
 
 -- | Union of DFAs
 --
@@ -38,6 +44,31 @@ data StateUnion s1 s2
   = Start
   | S1 s1
   | S2 s2
+  deriving (Show, Eq, Universe)
+
+instance forall s1 s2. (Bounded s2) => Bounded (StateUnion s1 s2) where
+  minBound = Start
+  maxBound = S2 (maxBound @s2)
+
+instance forall s1 s2. (Bounded s1, Bounded s2, Enum s1, Enum s2) => Enum (StateUnion s1 s2) where
+  toEnum i
+    | i == 0 = Start
+    | i <= endS1 = S1 (toEnum @s1 (i - startS1))
+    | i <= endS2 = S2 (toEnum @s2 (i - startS2))
+    | otherwise = error "invalid bound for enum"
+    where
+      startS1 = 1
+      endS1 = startS1 + fromEnum (maxBound @s1)
+      startS2 = endS1 + 1
+      endS2 = startS2 + fromEnum (maxBound @s2)
+  fromEnum su = case su of
+    Start -> 0
+    S1 s1 -> startS1 + fromEnum s1
+    S2 s2 -> startS2 + fromEnum s2
+    where
+      startS1 = 1
+      endS1 = startS1 + fromEnum (maxBound @s1)
+      startS2 = endS1 + 1
 
 -- | Union of NFAs
 --
@@ -68,3 +99,22 @@ concatN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ (Left s1) (Set end)
     δ (Right q') a = map Right (δ2 q' a)
     end (Left _) = False
     end (Right q') = e2 `contains` q'
+
+-- | Union of TypedNFAs
+unionNT ::
+  (Universe s1, Universe s2, Eq s1, Eq s2) =>
+  TypedNFA s1 a ->
+  TypedNFA s2 a ->
+  TypedNFA (StateUnion s1 s2) a
+unionNT (TypedNFA δ1 s1 e1) (TypedNFA δ2 s2 e2) = TypedNFA δ Start (Set end)
+  where
+    δ q a = case q of
+      Start -> case a of
+        Nothing -> singleton (S1 s1) <> singleton (S2 s2)
+        _ -> emptySet
+      S1 q' -> mapS S1 (δ1 q' a)
+      S2 q' -> mapS S2 (δ2 q' a)
+    end q = case q of
+      Start -> False
+      S1 q' -> e1 `contains` q'
+      S2 q' -> e2 `contains` q'
