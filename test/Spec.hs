@@ -6,8 +6,9 @@ import Automata.Definitions.Set (Set (Set))
 import Automata.Regular.Conversion
 import Automata.Regular.DFA
 import Automata.Regular.NFA
+import Automata.Regular.Operations
 import Data.Map (Map, fromList, (!))
-import Data.Universe (Universe)
+import Data.Universe (Universe (universe))
 import Test.HUnit
 
 data Binary = Zero | One
@@ -152,10 +153,19 @@ example2Tests =
       try "typedDfa example2" True (nfaTToDfa example2T) (binarize "011")
     ]
 
+stateUnionTests :: Test
+stateUnionTests =
+  TestList
+    [ TestCase $ assertEqual "Correct universe set" allStates (universe :: [StateUnion Example2States Example2States])
+    ]
+  where
+    allStates = [Start] ++ map S1 (universe :: [Example2States]) ++ map S2 (universe :: [Example2States])
+
 main :: IO Counts
 main =
   runTestTT $
     TestList
       [ TestLabel "example1" example1Tests,
-        TestLabel "example2" example2Tests
+        TestLabel "example2" example2Tests,
+        TestLabel "StateUnion" stateUnionTests
       ]
