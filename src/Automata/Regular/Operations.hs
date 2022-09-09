@@ -118,3 +118,15 @@ unionNT (TypedNFA δ1 s1 e1) (TypedNFA δ2 s2 e2) = TypedNFA δ Start (Set end)
       Start -> False
       S1 q' -> e1 `contains` q'
       S2 q' -> e2 `contains` q'
+
+concatNT ::
+  (Universe s1, Universe s2, Eq s1, Eq s2) =>
+  TypedNFA s1 a ->
+  TypedNFA s2 a ->
+  TypedNFA (Either s1 s2) a
+concatNT (TypedNFA δ1 s1 e1) (TypedNFA δ2 s2 e2) = TypedNFA δ (Left s1) (Set end)
+  where
+    δ (Left q') a = (fromList [Right s2 | isNothing a && e1 `contains` q']) <> mapS Left (δ1 q' a)
+    δ (Right q') a = mapS Right (δ2 q' a)
+    end (Left _) = False
+    end (Right q') = e2 `contains` q'
