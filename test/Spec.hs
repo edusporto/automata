@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE LambdaCase #-}
 
-import Automata.Automaton (Automaton (accepts), FiniteAutomaton (acceptsT))
+import Automata.Automaton (Automaton (accepts))
 import Automata.Definitions.Set (Set (Set))
 import Automata.Regular.Conversion
 import Automata.Regular.DFA
@@ -43,13 +43,13 @@ example1 =
           ("q001", fromList [('0', "q001"), ('1', "q001")])
         ]
 
-try :: (Automaton n, Show a) => String -> Bool -> n s a -> [a] -> Test
+try :: (Automaton n s a, Show a) => String -> Bool -> n s a -> [a] -> Test
 try name bool automaton str =
   TestCase $ assertEqual (name ++ " " ++ show str) bool (accepts automaton str)
 
-tryT :: (Universe s, Eq s, FiniteAutomaton n, Show a) => String -> Bool -> n s a -> [a] -> Test
-tryT name bool automaton str =
-  TestCase $ assertEqual (name ++ " " ++ show str) bool (acceptsT automaton str)
+-- tryT :: (Universe s, Eq s, FiniteAutomaton n, Show a) => String -> Bool -> n s a -> [a] -> Test
+-- tryT name bool automaton str =
+--   TestCase $ assertEqual (name ++ " " ++ show str) bool (acceptsT automaton str)
 
 example1Tests :: Test
 example1Tests =
@@ -143,10 +143,10 @@ example2Tests =
       try "dfa example2" False (nfaToDfa example2) (binarize "1000"),
       try "dfa example2" True (nfaToDfa example2) (binarize "010110"),
       try "dfa example2" True (nfaToDfa example2) (binarize "011"),
-      tryT "typedNfa example2" True example2T (binarize "111"),
-      tryT "typedNfa example2" False example2T (binarize "1000"),
-      tryT "typedNfa example2" True example2T (binarize "010110"),
-      tryT "typedNfa example2" True example2T (binarize "011"),
+      try "typedNfa example2" True example2T (binarize "111"),
+      try "typedNfa example2" False example2T (binarize "1000"),
+      try "typedNfa example2" True example2T (binarize "010110"),
+      try "typedNfa example2" True example2T (binarize "011"),
       try "typedDfa example2" True (nfaTToDfa example2T) (binarize "111"),
       try "typedDfa example2" False (nfaTToDfa example2T) (binarize "1000"),
       try "typedDfa example2" True (nfaTToDfa example2T) (binarize "010110"),

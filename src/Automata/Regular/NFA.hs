@@ -1,9 +1,10 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Automata.Regular.NFA (module Automata.Regular.NFA) where
 
-import Automata.Automaton (Automaton, FiniteAutomaton (acceptsT), accepts)
+import Automata.Automaton (Automaton, accepts)
 import Automata.Definitions.Set (Set, inter, nonEmpty)
 import qualified Automata.Definitions.Set as S
 import Data.Foldable (foldl')
@@ -19,14 +20,11 @@ data NFA s a = NFA
     endings :: Set s
   }
 
-instance Automaton NFA where
+instance Automaton NFA s a where
   accepts :: Foldable t => NFA s a -> t a -> Bool
   accepts nfa string =
     let lastStates = run nfa string
      in any (endings nfa `S.contains`) lastStates
-
-instance FiniteAutomaton NFA where
-  acceptsT = accepts
 
 next :: (s -> Maybe a -> [s]) -> [s] -> a -> [s]
 next δ states symbol =
@@ -59,9 +57,9 @@ data TypedNFA s a = TypedNFA
     endingsT :: Set s
   }
 
-instance FiniteAutomaton TypedNFA where
-  acceptsT :: (Universe s, Eq s, Foldable t) => TypedNFA s a -> t a -> Bool
-  acceptsT nfa string =
+instance (Universe s, Eq s) => Automaton TypedNFA s a where
+  accepts :: Foldable t => TypedNFA s a -> t a -> Bool
+  accepts nfa string =
     let lastStates = runT nfa string
      in nonEmpty (endingsT nfa `inter` lastStates)
 
