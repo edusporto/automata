@@ -9,7 +9,7 @@ import Automata.Definitions.Set
 import Automata.Regular.Conversion (dfaToNfa, nfaToDfa)
 import Automata.Regular.DFA (DFA (DFA))
 import Automata.Regular.NFA (NFA (NFA), TypedNFA (TypedNFA))
-import Data.Maybe (isNothing)
+import Data.Maybe (isJust, isNothing)
 import Data.Universe (Universe)
 
 -- | Union of DFAs
@@ -35,6 +35,10 @@ interD (DFA δ1 q1 end1) (DFA δ2 q2 end2) = DFA δ (q1, q2) (Set end)
 -- TODO?: Don't use NFA for DFA concatenation
 concatD :: DFA s1 a -> DFA s2 a -> DFA [Either s1 s2] a
 concatD dfa1 dfa2 = nfaToDfa $ concatN (dfaToNfa dfa1) (dfaToNfa dfa2)
+
+-- TODO?: Don't use NFA for DFA star
+starD :: DFA s a -> DFA [Maybe s] a
+starD = nfaToDfa . starN . dfaToNfa
 
 -- | Used as the return type for the union of NFAs.
 --
@@ -100,6 +104,16 @@ concatN (NFA δ1 s1 e1) (NFA δ2 s2 e2) = NFA δ (Left s1) (Set end)
     end (Left _) = False
     end (Right q') = e2 `contains` q'
 
+starN :: NFA s a -> NFA (Maybe s) a
+starN (NFA δ1 s1 e1) = NFA δ Nothing (Set end)
+  where
+    δ Nothing (Just _) = []
+    δ Nothing Nothing = [Just s1]
+    δ (Just q) a
+      | e1 `contains` q && isJust a = Just s1 : map Just (δ1 q a)
+      | otherwise = map Just (δ1 q a)
+    end s = maybe True (e1 `contains`) s
+
 -- | Union of TypedNFAs
 unionNT ::
   (Universe s1, Universe s2, Eq s1, Eq s2) =>
@@ -130,3 +144,13 @@ concatNT (TypedNFA δ1 s1 e1) (TypedNFA δ2 s2 e2) = TypedNFA δ (Left s1) (Set 
     δ (Right q') a = mapS Right (δ2 q' a)
     end (Left _) = False
     end (Right q') = e2 `contains` q'
+
+starNT :: (Universe s, Eq s) => TypedNFA s a -> TypedNFA (Maybe s) a
+starNT (TypedNFA δ1 s1 e1) = TypedNFA δ Nothing (Set end)
+  where
+    δ Nothing (Just _) = emptySet
+    δ Nothing Nothing = singleton (Just s1)
+    δ (Just q) a
+      | e1 `contains` q && isJust a = singleton (Just s1) `union` mapS Just (δ1 q a)
+      | otherwise = mapS Just (δ1 q a)
+    end s = maybe True (e1 `contains`) s
