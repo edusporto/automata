@@ -28,6 +28,7 @@ library
       Automata.Definitions.Set
       Automata.Regular.Conversion
       Automata.Regular.DFA
+      Automata.Regular.Expression
       Automata.Regular.NFA
       Automata.Regular.Operations
       Lib
